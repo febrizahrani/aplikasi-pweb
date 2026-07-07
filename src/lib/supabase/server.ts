@@ -18,7 +18,9 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // ignore in Server Component
+            // setAll error can be ignored in Server Components
+            // (they cannot set cookies), but in Server Actions
+            // this should not silently fail.
           }
         },
       },

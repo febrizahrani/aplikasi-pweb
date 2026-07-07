@@ -1,18 +1,27 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { loginAction } from "@/actions/auth";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   async function handleSubmit(formData: FormData) {
     setError("");
     startTransition(async () => {
-      const result = await loginAction(formData);
-      if (result?.error) {
-        setError(result.error);
+      try {
+        const result = await loginAction(formData);
+        if (result?.error) {
+          setError(result.error);
+        } else if (result?.success) {
+          router.push("/dashboard");
+          router.refresh();
+        }
+      } catch {
+        setError("Terjadi kesalahan. Silakan coba lagi.");
       }
     });
   }
@@ -49,7 +58,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">
               {error}
             </div>
           )}
