@@ -27,8 +27,8 @@ Human Resource Information System - Sistem HRD berbasis web untuk mengelola data
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/username/hris-next.git
-cd hris-next
+git clone https://github.com/febrizahrani/aplikasi-pweb.git
+cd aplikasi-pweb
 ```
 
 ### 2. Install Dependencies
@@ -92,37 +92,6 @@ Buka http://localhost:3000
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 6. Klik "Deploy"
 
-### Custom Domain (Opsional)
-
-1. Buka Settings > Domains
-2. Tambahkan custom domain
-3. Update DNS records sesuai instruksi
-
-## Struktur Project
-
-```
-hris-next/
-├── src/
-│   ├── app/                    # Pages & Routes
-│   │   ├── (authenticated)/    # Protected routes
-│   │   │   ├── employees/      # CRUD Pegawai
-│   │   │   ├── attendance/     # Absensi
-│   │   │   ├── payroll/        # Gaji
-│   │   │   ├── performance/    # Penilaian
-│   │   │   └── reports/        # Laporan
-│   │   ├── dashboard/          # Dashboard
-│   │   └── login/              # Auth pages
-│   ├── components/             # React components
-│   ├── lib/                    # Utilities
-│   │   └── supabase/           # Supabase client
-│   ├── actions/                # Server actions
-│   └── types/                  # TypeScript types
-├── supabase/
-│   ├── migrations/             # SQL migrations
-│   └── seed.sql                # Sample data
-└── public/                     # Static assets
-```
-
 ## Database Schema
 
 - **users** - User accounts (extends Supabase Auth)
@@ -132,14 +101,6 @@ hris-next/
 - **attendance** - Absensi
 - **payroll** - Penggajian
 - **performance** - Penilaian kinerja
-
-## Akun Default
-
-| Role | Email | Akses |
-|------|-------|-------|
-| Admin | admin@hris.com | Full access |
-| Manager | - | Lihat dashboard, laporan, penilaian |
-| Karyawan | - | Lihat profil, absensi, slip gaji |
 
 ## License
 
