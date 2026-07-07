@@ -10,7 +10,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -18,6 +17,7 @@ export default function LoginPage() {
     setError("");
 
     try {
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -32,8 +32,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError("Network error: " + msg);
+      setError("Gagal koneksi ke server. " + String(err));
       setLoading(false);
     }
   }
@@ -48,9 +47,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               value={email}
@@ -62,9 +59,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
               value={password}
@@ -91,10 +86,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a
-            href="/login/forgot-password"
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <a href="/login/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
             Lupa password?
           </a>
         </div>
