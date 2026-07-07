@@ -9,12 +9,14 @@ export default async function AuthenticatedLayout({
 }) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session) {
     redirect("/login");
   }
+
+  const user = session.user;
 
   let role = "karyawan";
   try {
