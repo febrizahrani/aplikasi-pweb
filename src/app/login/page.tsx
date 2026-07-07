@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      setDebugInfo(`URL: ${supabase.supabaseUrl} | Mengirim login...`);
+      setDebugInfo("Mengirim login ke Supabase...");
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
