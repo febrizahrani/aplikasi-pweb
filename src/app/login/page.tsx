@@ -1,29 +1,41 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginAction } from "@/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError("");
-    startTransition(async () => {
-      try {
-        const result = await loginAction(formData);
-        if (result?.error) {
-          setError(result.error);
-        } else if (result?.success) {
-          router.push("/dashboard");
-          router.refresh();
-        }
-      } catch {
-        setError("Terjadi kesalahan. Silakan coba lagi.");
-      }
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
+
+    if (error) {
+      if (error.message.includes("Invalid login")) {
+        setError("Email atau password salah");
+      } else if (error.message.includes("Email not confirmed")) {
+        setError("Email belum dikonfirmasi. Cek inbox Anda.");
+      } else {
+        setError(error.message);
+      }
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -34,12 +46,13 @@ export default function LoginPage() {
           <p className="text-gray-500 mt-2">Human Resource Information System</p>
         </div>
 
-        <form action={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
-              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="email@perusahaan.com"
@@ -50,7 +63,8 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
-              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="••••••••"
@@ -65,10 +79,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {isPending ? "Loading..." : "Login"}
+            {loading ? "Loading..." : "Login"}
           </button>
         </form>
 
