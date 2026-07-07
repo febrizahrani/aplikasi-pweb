@@ -1,40 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { loginAction } from "@/actions/auth";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
+  async function handleSubmit(formData: FormData) {
     setError("");
-
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-        return;
+    startTransition(async () => {
+      const result = await loginAction(formData);
+      if (result?.error) {
+        setError(result.error);
       }
-
-      router.push("/dashboard");
-      router.refresh();
-    } catch (err: unknown) {
-      setError("Gagal koneksi ke server. " + String(err));
-      setLoading(false);
-    }
+    });
   }
 
   return (
@@ -45,13 +25,12 @@ export default function LoginPage() {
           <p className="text-gray-500 mt-2">Human Resource Information System</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form action={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="email@perusahaan.com"
@@ -62,8 +41,7 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              name="password"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="••••••••"
@@ -78,10 +56,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={isPending}
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Login"}
+            {isPending ? "Loading..." : "Login"}
           </button>
         </form>
 
