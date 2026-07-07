@@ -9,46 +9,33 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setDebugInfo("Mengirim request ke Supabase...");
     setLoading(true);
 
-    try {
-      setDebugInfo("Mengirim login ke Supabase...");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setDebugInfo(`Supabase error: ${error.message} (status: ${error.status})`);
-        if (error.message.includes("Invalid login")) {
-          setError("Email atau password salah");
-        } else if (error.message.includes("Email not confirmed")) {
-          setError("Email belum dikonfirmasi. Cek inbox Anda.");
-        } else {
-          setError(error.message);
-        }
-        setLoading(false);
-        return;
+    if (error) {
+      if (error.message.includes("Invalid login")) {
+        setError("Email atau password salah");
+      } else if (error.message.includes("Email not confirmed")) {
+        setError("Email belum dikonfirmasi. Cek inbox Anda.");
+      } else {
+        setError(error.message);
       }
-
-      setDebugInfo("Login berhasil! Redirecting...");
-      router.push("/dashboard");
-      router.refresh();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setDebugInfo(`Fetch error: ${msg}`);
-      setError(`Gagal menghubungi server: ${msg}`);
       setLoading(false);
+      return;
     }
+
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -87,12 +74,6 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-200">
               {error}
-            </div>
-          )}
-
-          {debugInfo && (
-            <div className="bg-gray-100 text-gray-700 text-xs p-3 rounded-lg font-mono break-all">
-              {debugInfo}
             </div>
           )}
 
