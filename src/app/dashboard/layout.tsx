@@ -17,13 +17,21 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // Get user profile -如果 users table doesn't exist, default to karyawan
+  let role = "karyawan";
+  try {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-  const role = ((profile as unknown as { role?: string })?.role) || "karyawan";
+    if (profile) {
+      role = (profile as { role?: string }).role || "karyawan";
+    }
+  } catch {
+    // users table might not exist yet
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">

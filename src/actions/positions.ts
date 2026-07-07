@@ -8,30 +8,21 @@ type SupabaseClient = any;
 
 export async function getPositions() {
   const supabase: SupabaseClient = await createClient();
-  const { data, error } = await supabase
-    .from("positions")
-    .select("*")
-    .order("nama_jabatan");
+  try {
+    const { data, error } = await supabase
+      .from("positions")
+      .select("*")
+      .order("nama_jabatan");
 
-  if (error) throw error;
-  return data || [];
-}
-
-export async function getPositionById(id: string) {
-  const supabase: SupabaseClient = await createClient();
-  const { data, error } = await supabase
-    .from("positions")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function createPosition(input: { nama_jabatan: string }) {
   const supabase: SupabaseClient = await createClient();
-
   const { data, error } = await supabase
     .from("positions")
     .insert(input)
@@ -39,41 +30,13 @@ export async function createPosition(input: { nama_jabatan: string }) {
     .single();
 
   if (error) throw error;
-
   revalidatePath("/employees");
-  revalidatePath("/dashboard");
-
-  return data;
-}
-
-export async function updatePosition(id: string, input: { nama_jabatan?: string }) {
-  const supabase: SupabaseClient = await createClient();
-
-  const { data, error } = await supabase
-    .from("positions")
-    .update(input)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  revalidatePath("/employees");
-  revalidatePath("/dashboard");
-
   return data;
 }
 
 export async function deletePosition(id: string) {
   const supabase: SupabaseClient = await createClient();
-
-  const { error } = await supabase
-    .from("positions")
-    .delete()
-    .eq("id", id);
-
+  const { error } = await supabase.from("positions").delete().eq("id", id);
   if (error) throw error;
-
   revalidatePath("/employees");
-  revalidatePath("/dashboard");
 }

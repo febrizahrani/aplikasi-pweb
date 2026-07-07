@@ -8,17 +8,21 @@ type SupabaseClient = any;
 
 export async function getEmployees() {
   const supabase: SupabaseClient = await createClient();
-  const { data, error } = await supabase
-    .from("employees")
-    .select(`
-      *,
-      department:departments(id, nama_departemen),
-      position:positions(id, nama_jabatan)
-    `)
-    .order("created_at", { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from("employees")
+      .select(`
+        *,
+        department:departments(id, nama_departemen),
+        position:positions(id, nama_jabatan)
+      `)
+      .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return data || [];
+    if (error) throw error;
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getEmployeeById(id: string) {
@@ -37,22 +41,6 @@ export async function getEmployeeById(id: string) {
   return data;
 }
 
-export async function searchEmployees(query: string) {
-  const supabase: SupabaseClient = await createClient();
-  const { data, error } = await supabase
-    .from("employees")
-    .select(`
-      *,
-      department:departments(id, nama_departemen),
-      position:positions(id, nama_jabatan)
-    `)
-    .or(`nama.ilike.%${query}%,nik.ilike.%${query}%,email.ilike.%${query}%`)
-    .order("nama");
-
-  if (error) throw error;
-  return data || [];
-}
-
 export async function createEmployee(input: {
   nik: string;
   nama: string;
@@ -65,7 +53,6 @@ export async function createEmployee(input: {
   tanggal_masuk: string;
 }) {
   const supabase: SupabaseClient = await createClient();
-
   const { data, error } = await supabase
     .from("employees")
     .insert(input)
@@ -73,16 +60,13 @@ export async function createEmployee(input: {
     .single();
 
   if (error) throw error;
-
   revalidatePath("/employees");
   revalidatePath("/dashboard");
-
   return data;
 }
 
 export async function updateEmployee(id: string, input: Record<string, unknown>) {
   const supabase: SupabaseClient = await createClient();
-
   const { data, error } = await supabase
     .from("employees")
     .update(input)
@@ -91,41 +75,15 @@ export async function updateEmployee(id: string, input: Record<string, unknown>)
     .single();
 
   if (error) throw error;
-
   revalidatePath("/employees");
   revalidatePath("/dashboard");
-
   return data;
 }
 
 export async function deleteEmployee(id: string) {
   const supabase: SupabaseClient = await createClient();
-
   const { error } = await supabase.from("employees").delete().eq("id", id);
-
   if (error) throw error;
-
   revalidatePath("/employees");
   revalidatePath("/dashboard");
-}
-
-export async function getEmployeeCountByStatus() {
-  const supabase: SupabaseClient = await createClient();
-  const { data, error } = await supabase
-    .from("employees")
-    .select("status");
-
-  if (error) throw error;
-
-  const counts: Record<string, number> = {
-    Aktif: 0,
-    "Non-aktif": 0,
-    Cuti: 0,
-  };
-
-  data?.forEach((emp: { status: string }) => {
-    counts[emp.status] = (counts[emp.status] || 0) + 1;
-  });
-
-  return counts;
 }

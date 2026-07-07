@@ -1,22 +1,59 @@
-import {
-  getDashboardStats,
-  getRecentEmployees,
-  getAttendanceChartData,
-  getDepartmentDistribution,
-} from "@/actions/dashboard";
-import { getAttendanceByDate } from "@/actions/attendance";
 import DashboardCharts from "@/components/DashboardCharts";
 
-export default async function DashboardPage() {
-  const today = new Date().toISOString().split("T")[0];
+async function safeGetStats() {
+  try {
+    const { getDashboardStats } = await import("@/actions/dashboard");
+    return await getDashboardStats();
+  } catch {
+    return { total_employees: 0, total_departments: 0, today_attendance: 0 };
+  }
+}
 
+async function safeGetRecentEmployees() {
+  try {
+    const { getRecentEmployees } = await import("@/actions/dashboard");
+    return await getRecentEmployees(5);
+  } catch {
+    return [];
+  }
+}
+
+async function safeGetChartData() {
+  try {
+    const { getAttendanceChartData } = await import("@/actions/dashboard");
+    return await getAttendanceChartData();
+  } catch {
+    return [];
+  }
+}
+
+async function safeGetDepartmentData() {
+  try {
+    const { getDepartmentDistribution } = await import("@/actions/dashboard");
+    return await getDepartmentDistribution();
+  } catch {
+    return [];
+  }
+}
+
+async function safeGetAttendance() {
+  try {
+    const { getAttendanceByDate } = await import("@/actions/attendance");
+    const today = new Date().toISOString().split("T")[0];
+    return await getAttendanceByDate(today);
+  } catch {
+    return [];
+  }
+}
+
+export default async function DashboardPage() {
   const [stats, recentEmployees, chartData, departmentData, todayAttendance] =
     await Promise.all([
-      getDashboardStats(),
-      getRecentEmployees(5),
-      getAttendanceChartData(),
-      getDepartmentDistribution(),
-      getAttendanceByDate(today),
+      safeGetStats(),
+      safeGetRecentEmployees(),
+      safeGetChartData(),
+      safeGetDepartmentData(),
+      safeGetAttendance(),
     ]);
 
   return (
@@ -75,35 +112,25 @@ export default async function DashboardPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left text-sm font-medium text-gray-500 pb-3">
-                    NIK
-                  </th>
-                  <th className="text-left text-sm font-medium text-gray-500 pb-3">
-                    Nama
-                  </th>
-                  <th className="text-left text-sm font-medium text-gray-500 pb-3">
-                    Departemen
-                  </th>
-                  <th className="text-left text-sm font-medium text-gray-500 pb-3">
-                    Status
-                  </th>
+                  <th className="text-left text-sm font-medium text-gray-500 pb-3">NIK</th>
+                  <th className="text-left text-sm font-medium text-gray-500 pb-3">Nama</th>
+                  <th className="text-left text-sm font-medium text-gray-500 pb-3 hidden md:table-cell">Departemen</th>
+                  <th className="text-left text-sm font-medium text-gray-500 pb-3">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {recentEmployees.map((emp: { id: string; nik: string; nama: string; status: string; department: { nama_departemen?: string } | null }) => {
-                  return (
-                    <tr key={emp.id}>
-                      <td className="py-3 text-sm text-gray-900">{emp.nik}</td>
-                      <td className="py-3 text-sm text-gray-900">{emp.nama}</td>
-                      <td className="py-3 text-sm text-gray-600">
-                        {emp.department?.nama_departemen || "-"}
-                      </td>
-                      <td className="py-3">
-                        <StatusBadge status={emp.status} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                {recentEmployees.map((emp: { id: string; nik: string; nama: string; status: string; department: { nama_departemen?: string } | null }) => (
+                  <tr key={emp.id}>
+                    <td className="py-3 text-sm text-gray-900">{emp.nik}</td>
+                    <td className="py-3 text-sm text-gray-900">{emp.nama}</td>
+                    <td className="py-3 text-sm text-gray-600 hidden md:table-cell">
+                      {emp.department?.nama_departemen || "-"}
+                    </td>
+                    <td className="py-3">
+                      <StatusBadge status={emp.status} />
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -113,17 +140,7 @@ export default async function DashboardPage() {
   );
 }
 
-function StatCard({
-  title,
-  value,
-  icon,
-  color,
-}: {
-  title: string;
-  value: string;
-  icon: string;
-  color: string;
-}) {
+function StatCard({ title, value, icon, color }: { title: string; value: string; icon: string; color: string }) {
   const colors: Record<string, string> = {
     blue: "bg-blue-50 text-blue-600",
     purple: "bg-purple-50 text-purple-600",
@@ -154,9 +171,7 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <span
-      className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status] || "bg-gray-100 text-gray-800"}`}
-    >
+    <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[status] || "bg-gray-100 text-gray-800"}`}>
       {status}
     </span>
   );
