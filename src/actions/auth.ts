@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function loginAction(formData: FormData) {
   const email = formData.get("email") as string;
@@ -28,7 +27,6 @@ export async function loginAction(formData: FormData) {
     return { error: error.message };
   }
 
-  // Verify session was actually created
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
     return { error: "Gagal membuat session. Coba lagi." };
@@ -54,34 +52,52 @@ export async function signupAction(input: {
     return { error: "Password minimal 6 karakter" };
   }
 
-  const supabase = createAdminClient();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { nama },
-    },
-  });
-
-  if (error) {
-    const msg = error.message;
-    if (msg.includes("already registered")) return { error: "Email sudah terdaftar" };
-    if (msg.includes("over_email_send_rate_limit")) return { error: "Terlalu banyak percobaan. Tunggu beberapa menit." };
-    return { error: msg };
+  if (!supabaseUrl || !supabaseKey) {
+    return { error: "Konfigurasi Supabase tidak ditemukan" };
   }
 
-  // Trigger on_auth_user_created otomatis insert ke public.users
-  // Upsert manual sebagai fallback
-  if (data.user) {
-    await supabase.from("users").upsert({
-      id: data.user.id,
-      email,
-      role: "karyawan",
-    }, { onConflict: "id" });
-  }
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        data: { nama },
+      }),
+    });
 
-  return { success: "Akun berhasil dibuat! Silakan login." };
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      const msg = data.error?.msg || data.error || "Gagal membuat akun";
+      if (typeof msg === "string" && msg.includes("already")) {
+        return { error: "Email sudah terdaftar" };
+      }
+      return { error: msg };
+    }
+
+    if (data.user) {
+      const supabase = await createClient();
+      await supabase.from("users").upsert({
+        id: data.user.id,
+        email,
+        role: "karyawan",
+      }, { onConflict: "id" });
+    }
+
+    return { success: "Akun berhasil dibuat! Silakan login." };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Gagal menghubungi server";
+    return { error: message };
+  }
 }
 
 export async function logoutAction() {
