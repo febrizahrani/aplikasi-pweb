@@ -12,12 +12,12 @@ insert into public.departments (id, nama_departemen) values
 
 -- Positions
 insert into public.positions (id, nama_jabatan) values
-  ('p1000000-0000-0000-0000-000000000001', 'Manager'),
-  ('p1000000-0000-0000-0000-000000000002', 'Staff'),
-  ('p1000000-0000-0000-0000-000000000003', 'Senior Developer'),
-  ('p1000000-0000-0000-0000-000000000004', 'Junior Developer'),
-  ('p1000000-0000-0000-0000-000000000005', 'Director'),
-  ('p1000000-0000-0000-0000-000000000006', 'Analyst');
+  ('a1000000-0000-0000-0000-000000000001', 'Manager'),
+  ('a1000000-0000-0000-0000-000000000002', 'Staff'),
+  ('a1000000-0000-0000-0000-000000000003', 'Senior Developer'),
+  ('a1000000-0000-0000-0000-000000000004', 'Junior Developer'),
+  ('a1000000-0000-0000-0000-000000000005', 'Director'),
+  ('a1000000-0000-0000-0000-000000000006', 'Analyst');
 
 -- Sample Employees (note: these need valid department_id and position_id)
 -- First, create an admin user in Supabase Auth, then run:

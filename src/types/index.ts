@@ -1,6 +1,4 @@
 import type { Database } from "./database";
-
-// Re-export database types
 export type { Database } from "./database";
 
 // Table row types

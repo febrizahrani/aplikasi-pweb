@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
 export default function LoadingSpinner({ fullScreen = false }: { fullScreen?: boolean }) {
   if (fullScreen) {
     return (
