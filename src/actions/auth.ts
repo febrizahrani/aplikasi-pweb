@@ -60,7 +60,6 @@ export async function signupAction(input: {
     password,
     options: {
       data: { nama },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "http://localhost:3000"}/auth/callback`,
     },
   });
 
@@ -72,15 +71,13 @@ export async function signupAction(input: {
   }
 
   if (data.user) {
-    const { error: profileError } = await supabase.from("users").insert({
+    // Trigger on_auth_user_created akan otomatis insert ke public.users
+    // Tapi kita insert manual juga untuk jaga-jaga
+    await supabase.from("users").upsert({
       id: data.user.id,
       email,
       role: "karyawan",
-    });
-
-    if (profileError) {
-      return { error: "Gagal membuat profil. Coba login." };
-    }
+    }, { onConflict: "id" });
   }
 
   return { success: "Akun berhasil dibuat! Silakan login." };
