@@ -87,3 +87,38 @@ export async function deleteEmployee(id: string) {
   revalidatePath("/employees");
   revalidatePath("/dashboard");
 }
+
+export async function getMyProfile() {
+  const supabase: SupabaseClient = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("employees")
+    .select(`
+      *,
+      department:departments(id, nama_departemen),
+      position:positions(id, nama_jabatan)
+    `)
+    .eq("email", user.email)
+    .single();
+
+  if (error) return null;
+  return data;
+}
+
+export async function updateMyProfile(input: {
+  phone?: string | null;
+}) {
+  const supabase: SupabaseClient = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Tidak terautentikasi");
+
+  const { error } = await supabase
+    .from("employees")
+    .update(input)
+    .eq("email", user.email);
+
+  if (error) throw error;
+  revalidatePath("/profile");
+}

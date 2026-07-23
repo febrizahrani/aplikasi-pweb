@@ -13,6 +13,7 @@ const navItems = [
   { href: "/payroll", label: "Gaji", icon: "💰", adminOnly: true },
   { href: "/performance", label: "Penilaian", icon: "⭐", adminOnly: true },
   { href: "/reports", label: "Laporan", icon: "📈", managerOrAbove: true },
+  { href: "/profile", label: "Profil Saya", icon: "👤" },
 ];
 
 interface SidebarProps {
