@@ -36,6 +36,56 @@ export async function loginAction(formData: FormData) {
   return { success: true };
 }
 
+type SignupResult = { error: string } | { success: string };
+
+export async function signupAction(input: {
+  email: string;
+  password: string;
+  nama: string;
+}): Promise<SignupResult> {
+  const { email, password, nama } = input;
+
+  if (!email || !password || !nama) {
+    return { error: "Semua field wajib diisi" };
+  }
+
+  if (password.length < 6) {
+    return { error: "Password minimal 6 karakter" };
+  }
+
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { nama },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : "http://localhost:3000"}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    if (error.message.includes("already registered")) {
+      return { error: "Email sudah terdaftar" };
+    }
+    return { error: error.message };
+  }
+
+  if (data.user) {
+    const { error: profileError } = await supabase.from("users").insert({
+      id: data.user.id,
+      email,
+      role: "karyawan",
+    });
+
+    if (profileError) {
+      return { error: "Gagal membuat profil. Coba login." };
+    }
+  }
+
+  return { success: "Akun berhasil dibuat! Silakan login." };
+}
+
 export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();

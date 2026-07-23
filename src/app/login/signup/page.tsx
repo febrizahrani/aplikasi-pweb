@@ -2,40 +2,35 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signupAction } from "@/actions/auth";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function SignupPage() {
+  const [form, setForm] = useState({ nama: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const result = await signupAction({
+      email: form.email,
+      password: form.password,
+      nama: form.nama,
     });
 
-    if (error) {
-      if (error.message.includes("Invalid login")) {
-        setError("Email atau password salah");
-      } else if (error.message.includes("Email not confirmed")) {
-        setError("Email belum dikonfirmasi. Cek inbox Anda.");
-      } else {
-        setError(error.message);
-      }
+    if ("error" in result) {
+      setError(result.error);
       setLoading(false);
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    setSuccess(result.success || "Akun berhasil dibuat!");
+    setTimeout(() => router.push("/login"), 2000);
   }
 
   return (
@@ -43,16 +38,28 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">HRIS Lite</h1>
-          <p className="text-gray-500 mt-2">Human Resource Information System</p>
+          <p className="text-gray-500 mt-2">Buat Akun Baru</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+            <input
+              type="text"
+              value={form.nama}
+              onChange={(e) => setForm({ ...form, nama: e.target.value })}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              placeholder="Masukkan nama lengkap"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               placeholder="email@perusahaan.com"
@@ -63,11 +70,12 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
+              minLength={6}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              placeholder="••••••••"
+              placeholder="Minimal 6 karakter"
             />
           </div>
 
@@ -77,23 +85,26 @@ export default function LoginPage() {
             </div>
           )}
 
+          {success && (
+            <div className="bg-green-50 text-green-600 text-sm p-3 rounded-lg border border-green-200">
+              {success}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Login"}
+            {loading ? "Membuat akun..." : "Daftar"}
           </button>
         </form>
 
-        <div className="mt-6 text-center space-y-2">
-          <a href="/login/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
-            Lupa password?
-          </a>
+        <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Belum punya akun?{" "}
-            <a href="/login/signup" className="text-blue-600 hover:text-blue-800">
-              Daftar
+            Sudah punya akun?{" "}
+            <a href="/login" className="text-blue-600 hover:text-blue-800">
+              Login
             </a>
           </p>
         </div>
