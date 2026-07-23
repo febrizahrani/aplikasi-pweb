@@ -34,7 +34,9 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/auth") ||
       pathname.startsWith("/debug");
 
-    if (!session && !isPublicRoute) {
+    const isServerAction = request.headers.get("next-action") !== null;
+
+    if (!session && !isPublicRoute && !isServerAction) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
