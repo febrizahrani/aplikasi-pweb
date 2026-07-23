@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const [form, setForm] = useState({ nama: "", email: "", password: "" });
@@ -12,6 +10,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,57 +18,27 @@ export default function SignupPage() {
     setSuccess("");
     setLoading(true);
 
-    try {
-      const res = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-          data: { nama: form.nama },
-        }),
-      });
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: { data: { nama: form.nama } },
+    });
 
-      const data = await res.json();
-
-      if (!res.ok || data.error) {
-        const msg = data.error?.msg || data.error || "Gagal membuat akun";
-        if (typeof msg === "string" && msg.includes("already")) {
-          setError("Email sudah terdaftar");
-        } else {
-          setError(typeof msg === "string" ? msg : "Gagal membuat akun");
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Insert profile ke public.users
-      if (data.user) {
-        await fetch(`${supabaseUrl}/rest/v1/users`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: supabaseKey,
-            Authorization: `Bearer ${supabaseKey}`,
-            Prefer: "return=minimal",
-          },
-          body: JSON.stringify({
-            id: data.user.id,
-            email: form.email,
-            role: "karyawan",
-          }),
-        });
-      }
-
-      setSuccess("Akun berhasil dibuat! Mengalihkan ke login...");
-      setTimeout(() => router.push("/login"), 2000);
-    } catch (err) {
-      setError("Error: " + (err instanceof Error ? err.message : String(err)));
+    if (signUpError) {
+      setError(signUpError.message);
+      setLoading(false);
+      return;
     }
+
+    if (data.user) {
+      await supabase.from("users").upsert({
+        id: data.user.id,
+        email: form.email,
+        role: "karyawan",
+      }, { onConflict: "id" });
+    }
+
+    setSuccess("Berhasil! Silakan cek email untuk verifikasi, lalu login.");
     setLoading(false);
   }
 
