@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { signupAction } from "@/actions/auth";
 
 export default function SignupPage() {
   const [form, setForm] = useState({ nama: "", email: "", password: "" });
@@ -10,7 +10,6 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,36 +29,19 @@ export default function SignupPage() {
       return;
     }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const result = await signupAction({
       email: form.email,
       password: form.password,
-      options: {
-        data: { nama: form.nama },
-      },
+      nama: form.nama,
     });
 
-    if (signUpError) {
-      const msg = signUpError.message;
-      if (msg.includes("already registered")) {
-        setError("Email sudah terdaftar");
-      } else if (msg.includes("over_email_send_rate_limit")) {
-        setError("Terlalu banyak percobaan. Tunggu beberapa menit.");
-      } else {
-        setError(msg);
-      }
+    if ("error" in result) {
+      setError(result.error);
       setLoading(false);
       return;
     }
 
-    if (data.user) {
-      await supabase.from("users").upsert({
-        id: data.user.id,
-        email: form.email,
-        role: "karyawan",
-      }, { onConflict: "id" });
-    }
-
-    setSuccess("Akun berhasil dibuat! Mengalihkan ke login...");
+    setSuccess(result.success || "Akun berhasil dibuat!");
     setTimeout(() => router.push("/login"), 2000);
     setLoading(false);
   }

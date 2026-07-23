@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function loginAction(formData: FormData) {
   const email = formData.get("email") as string;
@@ -53,7 +54,7 @@ export async function signupAction(input: {
     return { error: "Password minimal 6 karakter" };
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase.auth.signUp({
     email,
