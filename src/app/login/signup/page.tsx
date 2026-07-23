@@ -38,7 +38,7 @@ export default function SignupPage() {
       }, { onConflict: "id" });
     }
 
-    setSuccess("Berhasil! Silakan cek email untuk verifikasi, lalu login.");
+    setSuccess("Akun berhasil dibuat! Mengalihkan ke login...");
     setLoading(false);
   }
 
