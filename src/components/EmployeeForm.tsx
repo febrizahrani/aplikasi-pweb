@@ -24,6 +24,7 @@ export default function EmployeeForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
     nik: employee?.nik || "",
@@ -45,8 +46,20 @@ export default function EmployeeForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    const newErrors: Record<string, string> = {};
+    if (!form.nik.trim()) newErrors.nik = "NIK wajib diisi";
+    if (!form.nama.trim()) newErrors.nama = "Nama wajib diisi";
+    if (!form.tanggal_masuk) newErrors.tanggal_masuk = "Tanggal masuk wajib diisi";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    setLoading(true);
 
     try {
       const payload = {
@@ -88,27 +101,29 @@ export default function EmployeeForm({
         </div>
       )}
 
+      <p className="text-sm text-gray-500 mb-4">
+        Field dengan tanda <span className="text-red-500">*</span> wajib diisi
+      </p>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField label="NIK" required>
+        <FormField label="NIK" required error={errors.nik}>
           <input
             type="text"
             name="nik"
             value={form.nik}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${errors.nik ? "border-red-500 bg-red-50" : "border-gray-300"}`}
             placeholder="Masukkan NIK"
           />
         </FormField>
 
-        <FormField label="Nama Lengkap" required>
+        <FormField label="Nama Lengkap" required error={errors.nama}>
           <input
             type="text"
             name="nama"
             value={form.nama}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${errors.nama ? "border-red-500 bg-red-50" : "border-gray-300"}`}
             placeholder="Masukkan nama lengkap"
           />
         </FormField>
@@ -194,14 +209,13 @@ export default function EmployeeForm({
           </select>
         </FormField>
 
-        <FormField label="Tanggal Masuk" required>
+        <FormField label="Tanggal Masuk" required error={errors.tanggal_masuk}>
           <input
             type="date"
             name="tanggal_masuk"
             value={form.tanggal_masuk}
             onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none ${errors.tanggal_masuk ? "border-red-500 bg-red-50" : "border-gray-300"}`}
           />
         </FormField>
       </div>
@@ -233,10 +247,12 @@ export default function EmployeeForm({
 function FormField({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -246,6 +262,9 @@ function FormField({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {children}
+      {error && (
+        <p className="text-red-500 text-xs mt-1">{error}</p>
+      )}
     </div>
   );
 }
