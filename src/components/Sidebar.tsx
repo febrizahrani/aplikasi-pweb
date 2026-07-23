@@ -9,6 +9,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/employees", label: "Pegawai", icon: "👥", adminOnly: true },
   { href: "/attendance", label: "Absensi", icon: "📅", adminOnly: true },
+  { href: "/leave", label: "Cuti", icon: "🌴" },
   { href: "/payroll", label: "Gaji", icon: "💰", adminOnly: true },
   { href: "/performance", label: "Penilaian", icon: "⭐", adminOnly: true },
   { href: "/reports", label: "Laporan", icon: "📈", managerOrAbove: true },
