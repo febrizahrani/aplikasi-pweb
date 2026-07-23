@@ -70,3 +70,36 @@ export async function deleteAttendance(id: string) {
   revalidatePath("/attendance");
   revalidatePath("/dashboard");
 }
+
+export async function updateAttendance(id: string, input: {
+  check_in?: string | null;
+  check_out?: string | null;
+  status?: string;
+}) {
+  const supabase: SupabaseClient = await createClient();
+  const { error } = await supabase
+    .from("attendance")
+    .update(input)
+    .eq("id", id);
+
+  if (error) throw error;
+  revalidatePath("/attendance");
+  revalidatePath("/dashboard");
+}
+
+export async function bulkCreateAttendance(records: {
+  employee_id: string;
+  tanggal: string;
+  check_in?: string | null;
+  check_out?: string | null;
+  status: string;
+}[]) {
+  const supabase: SupabaseClient = await createClient();
+  const { error } = await supabase
+    .from("attendance")
+    .upsert(records, { onConflict: "employee_id,tanggal" });
+
+  if (error) throw error;
+  revalidatePath("/attendance");
+  revalidatePath("/dashboard");
+}
