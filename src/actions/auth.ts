@@ -64,15 +64,15 @@ export async function signupAction(input: {
   });
 
   if (error) {
-    if (error.message.includes("already registered")) {
-      return { error: "Email sudah terdaftar" };
-    }
-    return { error: error.message };
+    const msg = error.message;
+    if (msg.includes("already registered")) return { error: "Email sudah terdaftar" };
+    if (msg.includes("over_email_send_rate_limit")) return { error: "Terlalu banyak percobaan. Tunggu beberapa menit." };
+    return { error: msg };
   }
 
+  // Trigger on_auth_user_created otomatis insert ke public.users
+  // Upsert manual sebagai fallback
   if (data.user) {
-    // Trigger on_auth_user_created akan otomatis insert ke public.users
-    // Tapi kita insert manual juga untuk jaga-jaga
     await supabase.from("users").upsert({
       id: data.user.id,
       email,

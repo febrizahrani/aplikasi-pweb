@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signupAction } from "@/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const [form, setForm] = useState({ nama: "", email: "", password: "" });
@@ -10,6 +10,7 @@ export default function SignupPage() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,20 +18,50 @@ export default function SignupPage() {
     setSuccess("");
     setLoading(true);
 
-    const result = await signupAction({
-      email: form.email,
-      password: form.password,
-      nama: form.nama,
-    });
-
-    if ("error" in result) {
-      setError(result.error);
+    if (!form.nama || !form.email || !form.password) {
+      setError("Semua field wajib diisi");
       setLoading(false);
       return;
     }
 
-    setSuccess(result.success || "Akun berhasil dibuat!");
+    if (form.password.length < 6) {
+      setError("Password minimal 6 karakter");
+      setLoading(false);
+      return;
+    }
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: { nama: form.nama },
+      },
+    });
+
+    if (signUpError) {
+      const msg = signUpError.message;
+      if (msg.includes("already registered")) {
+        setError("Email sudah terdaftar");
+      } else if (msg.includes("over_email_send_rate_limit")) {
+        setError("Terlalu banyak percobaan. Tunggu beberapa menit.");
+      } else {
+        setError(msg);
+      }
+      setLoading(false);
+      return;
+    }
+
+    if (data.user) {
+      await supabase.from("users").upsert({
+        id: data.user.id,
+        email: form.email,
+        role: "karyawan",
+      }, { onConflict: "id" });
+    }
+
+    setSuccess("Akun berhasil dibuat! Mengalihkan ke login...");
     setTimeout(() => router.push("/login"), 2000);
+    setLoading(false);
   }
 
   return (
