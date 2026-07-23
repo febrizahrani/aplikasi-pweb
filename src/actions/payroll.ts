@@ -87,7 +87,9 @@ export async function generatePayroll(bulan: string) {
 
   // Get attendance for the month
   const startDate = `${bulan}-01`;
-  const endDate = `${bulan}-31`;
+  const [year, month] = bulan.split("-").map(Number);
+  const lastDay = new Date(year, month, 0).getDate();
+  const endDate = `${bulan}-${String(lastDay).padStart(2, "0")}`;
 
   const { data: attendance } = await supabase
     .from("attendance")

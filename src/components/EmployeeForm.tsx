@@ -31,7 +31,7 @@ export default function EmployeeForm({
     nama: employee?.nama || "",
     email: employee?.email || "",
     phone: employee?.phone || "",
-    gender: employee?.gender || ("Laki-laki" as const),
+    gender: employee?.gender ?? "",
     department_id: employee?.department_id || "",
     position_id: employee?.position_id || "",
     status: employee?.status || ("Aktif" as const),
@@ -150,14 +150,14 @@ export default function EmployeeForm({
           />
         </FormField>
 
-        <FormField label="Jenis Kelamin" required>
+        <FormField label="Jenis Kelamin">
           <select
             name="gender"
             value={form.gender}
             onChange={handleChange}
-            required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           >
+            <option value="">Pilih Jenis Kelamin</option>
             <option value="Laki-laki">Laki-laki</option>
             <option value="Perempuan">Perempuan</option>
           </select>

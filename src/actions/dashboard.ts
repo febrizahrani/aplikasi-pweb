@@ -12,6 +12,11 @@ export async function getDashboardStats() {
       .from("employees")
       .select("*", { count: "exact", head: true });
 
+    const { count: activeEmployees } = await supabase
+      .from("employees")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "Aktif");
+
     const { count: totalDepartments } = await supabase
       .from("departments")
       .select("*", { count: "exact", head: true });
@@ -25,11 +30,12 @@ export async function getDashboardStats() {
 
     return {
       total_employees: totalEmployees || 0,
+      active_employees: activeEmployees || 0,
       total_departments: totalDepartments || 0,
       today_attendance: todayAttendance || 0,
     };
   } catch {
-    return { total_employees: 0, total_departments: 0, today_attendance: 0 };
+    return { total_employees: 0, active_employees: 0, total_departments: 0, today_attendance: 0 };
   }
 }
 

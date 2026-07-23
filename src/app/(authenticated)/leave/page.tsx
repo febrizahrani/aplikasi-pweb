@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getLeaveRequests, createLeaveRequest, updateLeaveStatus, deleteLeaveRequest } from "@/actions/leave";
 import { getEmployees } from "@/actions/employees";
+import { getUserRole } from "@/actions/auth";
 
 interface LeaveRequest {
   id: string;
@@ -38,14 +39,14 @@ export default function LeavePage() {
   }, []);
 
   async function loadData() {
-    const [leaveData, empData] = await Promise.all([
+    const [leaveData, empData, userRole] = await Promise.all([
       getLeaveRequests(),
       getEmployees(),
+      getUserRole(),
     ]);
     setRecords(leaveData);
     setEmployees(empData);
-
-    // Detect role from user email matching employee
+    setRole(userRole);
     setLoading(false);
   }
 
@@ -234,7 +235,7 @@ export default function LeavePage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
-                        {row.status === "Pending" && (
+                        {row.status === "Pending" && (role === "admin" || role === "manager") && (
                           <>
                             <button
                               onClick={() => handleApprove(row.id)}
@@ -250,12 +251,14 @@ export default function LeavePage() {
                             </button>
                           </>
                         )}
-                        <button
-                          onClick={() => handleDelete(row.id)}
-                          className="text-gray-500 hover:text-gray-700 text-sm"
-                        >
-                          Hapus
-                        </button>
+                        {role === "admin" && (
+                          <button
+                            onClick={() => handleDelete(row.id)}
+                            className="text-gray-500 hover:text-gray-700 text-sm"
+                          >
+                            Hapus
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

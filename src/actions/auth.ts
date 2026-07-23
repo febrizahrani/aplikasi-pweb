@@ -104,3 +104,21 @@ export async function logoutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
 }
+
+export async function getUserRole(): Promise<string> {
+  const supabase = await createClient();
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return "karyawan";
+
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    return (profile as { role?: string })?.role || "karyawan";
+  } catch {
+    return "karyawan";
+  }
+}

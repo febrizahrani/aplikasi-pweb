@@ -5,7 +5,7 @@ async function safeGetStats() {
     const { getDashboardStats } = await import("@/actions/dashboard");
     return await getDashboardStats();
   } catch {
-    return { total_employees: 0, total_departments: 0, today_attendance: 0 };
+    return { total_employees: 0, active_employees: 0, total_departments: 0, today_attendance: 0 };
   }
 }
 
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
         />
         <StatCard
           title="Pegawai Aktif"
-          value={stats.total_employees.toString()}
+          value={stats.active_employees.toString()}
           icon="✅"
           color="green"
         />
