@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/orgchart", label: "Bagan Organisasi", icon: "🏢", adminOnly: true },
   { href: "/employees", label: "Pegawai", icon: "👥", adminOnly: true },
   { href: "/attendance", label: "Absensi", icon: "📅", adminOnly: true },
   { href: "/leave", label: "Cuti", icon: "🌴" },
