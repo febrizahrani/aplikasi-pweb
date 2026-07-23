@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signupAction } from "@/actions/auth";
 
 export default function SignupPage() {
   const [form, setForm] = useState({ nama: "", email: "", password: "" });
@@ -29,20 +28,30 @@ export default function SignupPage() {
       return;
     }
 
-    const result = await signupAction({
-      email: form.email,
-      password: form.password,
-      nama: form.nama,
-    });
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          nama: form.nama,
+        }),
+      });
 
-    if ("error" in result) {
-      setError(result.error);
-      setLoading(false);
-      return;
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setError(data.error || "Gagal membuat akun");
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(data.success || "Akun berhasil dibuat!");
+      setTimeout(() => router.push("/login"), 2000);
+    } catch {
+      setError("Gagal menghubungi server");
     }
-
-    setSuccess(result.success || "Akun berhasil dibuat!");
-    setTimeout(() => router.push("/login"), 2000);
     setLoading(false);
   }
 
