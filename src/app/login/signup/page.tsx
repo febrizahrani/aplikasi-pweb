@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
 export default function SignupPage() {
   const [form, setForm] = useState({ nama: "", email: "", password: "" });
   const [error, setError] = useState("");
@@ -16,41 +19,56 @@ export default function SignupPage() {
     setSuccess("");
     setLoading(true);
 
-    if (!form.nama || !form.email || !form.password) {
-      setError("Semua field wajib diisi");
-      setLoading(false);
-      return;
-    }
-
-    if (form.password.length < 6) {
-      setError("Password minimal 6 karakter");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch(`${supabaseUrl}/auth/v1/signup`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
-          nama: form.nama,
+          data: { nama: form.nama },
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setError(data.error || "Gagal membuat akun");
+        const msg = data.error?.msg || data.error || "Gagal membuat akun";
+        if (typeof msg === "string" && msg.includes("already")) {
+          setError("Email sudah terdaftar");
+        } else {
+          setError(typeof msg === "string" ? msg : "Gagal membuat akun");
+        }
         setLoading(false);
         return;
       }
 
-      setSuccess(data.success || "Akun berhasil dibuat!");
+      // Insert profile ke public.users
+      if (data.user) {
+        await fetch(`${supabaseUrl}/rest/v1/users`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
+            Prefer: "return=minimal",
+          },
+          body: JSON.stringify({
+            id: data.user.id,
+            email: form.email,
+            role: "karyawan",
+          }),
+        });
+      }
+
+      setSuccess("Akun berhasil dibuat! Mengalihkan ke login...");
       setTimeout(() => router.push("/login"), 2000);
-    } catch {
-      setError("Gagal menghubungi server");
+    } catch (err) {
+      setError("Error: " + (err instanceof Error ? err.message : String(err)));
     }
     setLoading(false);
   }
